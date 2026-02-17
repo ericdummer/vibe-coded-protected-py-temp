@@ -1,0 +1,50 @@
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:16-alpine
+    container_name: vibe-postgres
+    environment:
+      # NEVER hardcode these values in production
+      # These are defaults for local development only
+      POSTGRES_USER: ${POSTGRES_USER:-vibeuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vibepass}
+      POSTGRES_DB: ${POSTGRES_DB:-vibedb}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vibeuser}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - vibe-network
+
+  # FastAPI Application
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vibe-web
+    environment:
+      # Load from .env file - NEVER commit credentials
+      DATABASE_URL: postgresql://${POSTGRES_USER:-vibeuser}:${POSTGRES_PASSWORD:-vibepass}@db:5432/${POSTGRES_DB:-vibedb}
+      DEBUG: ${DEBUG:-false}
+    ports:
+      - "${WEB_PORT:-8000}:8000"
+    volumes:
+      - ./app:/app/app
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - vibe-network
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+volumes:
+  postgres_data:
+
+networks:
+  vibe-network:
+    driver: bridge
