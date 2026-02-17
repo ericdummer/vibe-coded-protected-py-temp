@@ -1,8 +1,20 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from app.core.config import get_settings
 from app.api.routes import router
 
 settings = get_settings()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Lifespan event handler for application startup and shutdown.
+    """
+    # Startup: Initialize database connections, etc.
+    yield
+    # Shutdown: Close database connections, cleanup resources, etc.
+
 
 # Create FastAPI application instance
 app = FastAPI(
@@ -10,28 +22,11 @@ app = FastAPI(
     debug=settings.debug,
     docs_url="/docs",
     redoc_url="/redoc",
+    lifespan=lifespan,
 )
 
 # Include routers
 app.include_router(router, tags=["general"])
-
-
-@app.on_event("startup")
-async def startup_event():
-    """
-    Run on application startup.
-    Initialize database connections, etc.
-    """
-    pass
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """
-    Run on application shutdown.
-    Close database connections, cleanup resources, etc.
-    """
-    pass
 
 
 if __name__ == "__main__":
