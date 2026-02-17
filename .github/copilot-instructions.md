@@ -47,7 +47,7 @@ async def get_item(item_id: int, db: Session = Depends(get_db)):
 
 Example:
 ```python
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field, EmailStr, ConfigDict
 
 class UserCreate(BaseModel):
     email: EmailStr
@@ -58,8 +58,7 @@ class UserResponse(BaseModel):
     email: str
     username: str
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 ```
 
 ## Security: NEVER Store Credentials in Code
@@ -135,9 +134,7 @@ class Settings(BaseSettings):
     debug: bool = False
     allowed_hosts: list[str] = ["*"]
     
-    class Config:
-        env_file = ".env"
-        case_sensitive = False
+    model_config = {"env_file": ".env", "case_sensitive": False}
 
 @lru_cache()
 def get_settings() -> Settings:
@@ -157,12 +154,19 @@ async def info(settings: Settings = Depends(get_settings)):
 - Validate required settings on startup
 
 ```python
-# Validate settings on startup
-@app.on_event("startup")
-async def validate_config():
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: Validate settings
     settings = get_settings()
     if not settings.database_url:
         raise ValueError("DATABASE_URL must be set")
+    yield
+    # Shutdown: cleanup
+
+app = FastAPI(lifespan=lifespan)
 ```
 
 ## Database Best Practices
