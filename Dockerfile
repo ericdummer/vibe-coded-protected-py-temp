@@ -1,37 +1,51 @@
-# Use official Python runtime as base image
-FROM python:3.11-slim
+FROM python:3.11-slim-bookworm AS builder
 
-# Set working directory
-WORKDIR /app
+WORKDIR /build
 
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    SHELL=/bin/bash
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_NO_CACHE_DIR=1
 
-# Install system dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     gcc \
-    postgresql-client \
-    bash \
+    libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install Python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+COPY requirements.txt /build/requirements.txt
 
-# Copy application code
-COPY ./app /app/app
+RUN python -m pip install --upgrade pip setuptools wheel && \
+    pip wheel --wheel-dir /wheels -r /build/requirements.txt
 
-# Create non-root user for security
-RUN useradd -m -u 1000 -s /bin/bash appuser && \
+
+FROM python:3.11-slim-bookworm AS runtime
+
+WORKDIR /app
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    SHELL=/bin/bash \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_NO_CACHE_DIR=1
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    bash \
+    libpq5 \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /wheels /wheels
+COPY --from=builder /build/requirements.txt /app/requirements.txt
+
+RUN pip install --no-index --find-links=/wheels -r /app/requirements.txt && \
+    rm -rf /wheels
+
+COPY app /app/app
+
+RUN useradd --create-home --uid 1000 --shell /bin/bash appuser && \
     chown -R appuser:appuser /app
+
 USER appuser
 
-# Expose port
 EXPOSE 8000
 
-# Run the application
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
