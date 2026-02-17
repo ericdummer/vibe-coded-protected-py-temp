@@ -6,13 +6,15 @@ WORKDIR /app
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    SHELL=/bin/bash
 
 # Install system dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     gcc \
     postgresql-client \
+    bash \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install Python dependencies
@@ -24,7 +26,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
 COPY ./app /app/app
 
 # Create non-root user for security
-RUN useradd -m -u 1000 appuser && \
+RUN useradd -m -u 1000 -s /bin/bash appuser && \
     chown -R appuser:appuser /app
 USER appuser
 
