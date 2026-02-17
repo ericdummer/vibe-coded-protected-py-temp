@@ -208,7 +208,6 @@ __marimo__/
 
 # Docker
 docker-compose.override.yml
-.dockerignore
 
 # Database
 *.db
