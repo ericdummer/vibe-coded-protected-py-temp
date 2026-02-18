@@ -4,10 +4,12 @@ Test configuration management.
 from app.core.config import Settings, get_settings
 
 
-def test_settings_from_defaults():
+def test_settings_from_defaults(monkeypatch):
     """
     Test that settings can be created with defaults.
     """
+    monkeypatch.delenv("DEBUG", raising=False)
+    get_settings.cache_clear()
     settings = Settings(database_url="postgresql://user:pass@localhost:5432/db")
     assert settings.app_name == "Vibe Coded Protected API"
     assert settings.debug is False

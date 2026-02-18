@@ -30,7 +30,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1
 
 RUN apt-get update && \
-    apt-get upgrade -y && \
+    apt-get upgrade -y libsqlite3-0 libc6 zlib1g && \
     apt-get install -y --no-install-recommends \
     bash \
     libpq5 \
