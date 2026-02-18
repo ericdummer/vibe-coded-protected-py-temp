@@ -1,6 +1,7 @@
 """
 Test configuration management.
 """
+
 from app.core.config import Settings, get_settings
 
 

@@ -1,6 +1,7 @@
 """
 Test configuration and fixtures.
 """
+
 import pytest
 from fastapi.testclient import TestClient
 from app.main import app
@@ -20,6 +21,7 @@ def test_settings():
     Override settings for testing.
     """
     from app.core.config import Settings
+
     return Settings(
         database_url="postgresql://testuser:testpass@localhost:5432/testdb",
         debug=True,

@@ -7,19 +7,24 @@ class Settings(BaseSettings):
     Application settings loaded from environment variables.
     Never hardcode credentials here - always use environment variables.
     """
+
     # Application settings
     app_name: str = "Vibe Coded Protected API"
     debug: bool = False
-    
+
     # Database settings
     # Format: postgresql://user:password@host:port/database
     database_url: str
-    
+
     # Server settings
     host: str = "0.0.0.0"
     port: int = 8000
-    
-    model_config = {"env_file": ".env", "env_file_encoding": "utf-8", "case_sensitive": False}
+
+    model_config = {
+        "env_file": ".env",
+        "env_file_encoding": "utf-8",
+        "case_sensitive": False,
+    }
 
 
 @lru_cache()
