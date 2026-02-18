@@ -218,3 +218,7 @@ postgres_data/
 # IDE
 .vscode/
 .idea/
+
+#act .secrets for local github actions
+.secrets
+.act-secrets
