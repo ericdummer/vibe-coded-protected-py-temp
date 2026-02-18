@@ -1,2 +1,4 @@
 # zlib1g: No fix available in Debian Bookworm, low exploitability in this context
 CVE-2023-45853
+# sql-lite error -- not used
+CVE-2025-7458
