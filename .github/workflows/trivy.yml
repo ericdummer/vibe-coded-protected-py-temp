@@ -12,6 +12,8 @@ on:
 jobs:
   trivy-scan:
     runs-on: ubuntu-latest
+    env:
+      TRIVY_IGNOREFILE: .trivyignore
     
     permissions:
       contents: read
@@ -45,6 +47,8 @@ jobs:
 
   trivy-docker-scan:
     runs-on: ubuntu-latest
+    env:
+      TRIVY_IGNOREFILE: .trivyignore
     
     permissions:
       contents: read
