@@ -3,6 +3,7 @@ from typing import Any
 from functools import lru_cache
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=(".env",),
@@ -23,6 +24,7 @@ class Settings(BaseSettings):
         if os.getenv("PYTHON_DOTENV_DISABLED") == "1" and "_env_file" not in values:
             values["_env_file"] = None
         super().__init__(**values)
+
 
 @lru_cache
 def get_settings() -> Settings:

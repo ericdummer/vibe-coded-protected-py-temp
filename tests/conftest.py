@@ -30,7 +30,7 @@ def test_settings():
     return Settings(
         database_url="postgresql://testuser:testpass@localhost:5432/testdb",
         debug=True,
-        postgres_user = "a",
-        postgres_password = "a",
-        postgres_db = "l",
+        postgres_user="a",
+        postgres_password="a",
+        postgres_db="l",
     )

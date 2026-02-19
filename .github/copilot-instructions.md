@@ -209,6 +209,13 @@ def get_db():
 - Keep docstrings for public classes/functions.
 - Keep API docs and `README.md` in sync with behavior.
 
+### Ruff Formatting (Required)
+
+- Format all Python code with `ruff format` standards.
+- After applying code changes, run `ruff format` on all changed Python files before finalizing.
+- Ensure imports and lint fixes align with Ruff by running `ruff check --fix` when generating or modifying code.
+- Do not introduce formatting that conflicts with the project's Ruff configuration in `pyproject.toml`.
+
 ## Testing Guidelines
 
 - Use `pytest` and `TestClient` for API tests.
@@ -266,5 +273,6 @@ When generating code for this project:
 2. Never hardcode secrets; rely on environment variables.
 3. Use `pydantic-settings` and dependency injection patterns.
 4. Apply clear API error handling and response modeling.
-5. Keep code typed, tested, and documented.
-6. Follow secure Docker and CI practices.
+5. After applying changes, run `ruff format` on all changed Python files and use `ruff check --fix` as needed.
+6. Keep code typed, tested, and documented.
+7. Follow secure Docker and CI practices.

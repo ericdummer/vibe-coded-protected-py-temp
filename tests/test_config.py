@@ -34,11 +34,15 @@ def _clean_env(monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.delenv(key, raising=False)
 
 
-def test_settings_loads_from_environment(monkeypatch: pytest.MonkeyPatch, _clean_env: None) -> None:
+def test_settings_loads_from_environment(
+    monkeypatch: pytest.MonkeyPatch, _clean_env: None
+) -> None:
     monkeypatch.setenv("POSTGRES_USER", "test_user")
     monkeypatch.setenv("POSTGRES_PASSWORD", "test_pass")
     monkeypatch.setenv("POSTGRES_DB", "test_db")
-    monkeypatch.setenv("DATABASE_URL", "postgresql://test_user:test_pass@localhost:5432/test_db")
+    monkeypatch.setenv(
+        "DATABASE_URL", "postgresql://test_user:test_pass@localhost:5432/test_db"
+    )
     monkeypatch.setenv("DEBUG", "true")
 
     settings = Settings()
@@ -54,11 +58,15 @@ def test_settings_requires_postgres_fields(_clean_env: None) -> None:
         Settings()
 
 
-def test_get_settings_is_cached(monkeypatch: pytest.MonkeyPatch, _clean_env: None) -> None:
+def test_get_settings_is_cached(
+    monkeypatch: pytest.MonkeyPatch, _clean_env: None
+) -> None:
     monkeypatch.setenv("POSTGRES_USER", "cached_user")
     monkeypatch.setenv("POSTGRES_PASSWORD", "cached_pass")
     monkeypatch.setenv("POSTGRES_DB", "cached_db")
-    monkeypatch.setenv("DATABASE_URL", "postgresql://cached_user:cached_pass@localhost:5432/cached_db")
+    monkeypatch.setenv(
+        "DATABASE_URL", "postgresql://cached_user:cached_pass@localhost:5432/cached_db"
+    )
 
     first = get_settings()
     second = get_settings()
