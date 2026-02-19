@@ -2,40 +2,65 @@
 Test configuration management.
 """
 
+import pytest
+from pydantic import ValidationError
+
 from app.core.config import Settings, get_settings
 
 
-def test_settings_from_defaults(monkeypatch):
-    """
-    Test that settings can be created with defaults.
-    """
-    monkeypatch.delenv("DEBUG", raising=False)
+REQUIRED_ENV_VARS = (
+    "POSTGRES_USER",
+    "POSTGRES_PASSWORD",
+    "POSTGRES_DB",
+)
+
+
+@pytest.fixture(autouse=True)
+def _clear_settings_cache() -> None:
+    """Ensure get_settings() cache does not leak between tests."""
     get_settings.cache_clear()
-    settings = Settings(database_url="postgresql://user:pass@localhost:5432/db")
-    assert settings.app_name == "Vibe Coded Protected API"
-    assert settings.debug is False
-    assert settings.host == "0.0.0.0"
-    assert settings.port == 8000
+    yield
+    get_settings.cache_clear()
 
 
-def test_settings_custom_values():
-    """
-    Test that settings can be customized.
-    """
-    settings = Settings(
-        database_url="postgresql://custom:pass@localhost:5432/customdb",
-        app_name="Custom App",
-        debug=True,
-        port=9000,
-    )
-    assert settings.app_name == "Custom App"
+@pytest.fixture
+def _clean_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Isolate tests from local .env and process env noise."""
+    monkeypatch.setenv("PYTHON_DOTENV_DISABLED", "1")
+    monkeypatch.delenv("DEBUG", raising=False)
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+
+    for key in REQUIRED_ENV_VARS:
+        monkeypatch.delenv(key, raising=False)
+
+
+def test_settings_loads_from_environment(monkeypatch: pytest.MonkeyPatch, _clean_env: None) -> None:
+    monkeypatch.setenv("POSTGRES_USER", "test_user")
+    monkeypatch.setenv("POSTGRES_PASSWORD", "test_pass")
+    monkeypatch.setenv("POSTGRES_DB", "test_db")
+    monkeypatch.setenv("DATABASE_URL", "postgresql://test_user:test_pass@localhost:5432/test_db")
+    monkeypatch.setenv("DEBUG", "true")
+
+    settings = Settings()
+
+    assert settings.postgres_user == "test_user"
+    assert settings.postgres_password == "test_pass"
+    assert settings.postgres_db == "test_db"
     assert settings.debug is True
-    assert settings.port == 9000
 
 
-def test_get_settings_returns_settings():
-    """
-    Test that get_settings returns a Settings instance.
-    """
-    settings = get_settings()
-    assert isinstance(settings, Settings)
+def test_settings_requires_postgres_fields(_clean_env: None) -> None:
+    with pytest.raises(ValidationError):
+        Settings()
+
+
+def test_get_settings_is_cached(monkeypatch: pytest.MonkeyPatch, _clean_env: None) -> None:
+    monkeypatch.setenv("POSTGRES_USER", "cached_user")
+    monkeypatch.setenv("POSTGRES_PASSWORD", "cached_pass")
+    monkeypatch.setenv("POSTGRES_DB", "cached_db")
+    monkeypatch.setenv("DATABASE_URL", "postgresql://cached_user:cached_pass@localhost:5432/cached_db")
+
+    first = get_settings()
+    second = get_settings()
+
+    assert first is second

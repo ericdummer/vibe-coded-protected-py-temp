@@ -2,8 +2,13 @@
 Test configuration and fixtures.
 """
 
+import os
+
 import pytest
 from fastapi.testclient import TestClient
+
+os.environ.setdefault("DATABASE_URL", "sqlite:///./test.db")
+
 from app.main import app
 
 
@@ -25,4 +30,7 @@ def test_settings():
     return Settings(
         database_url="postgresql://testuser:testpass@localhost:5432/testdb",
         debug=True,
+        postgres_user = "a",
+        postgres_password = "a",
+        postgres_db = "l",
     )

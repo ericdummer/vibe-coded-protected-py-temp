@@ -1,36 +1,29 @@
-from pydantic_settings import BaseSettings
+import os
+from typing import Any
 from functools import lru_cache
-
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
-    """
-    Application settings loaded from environment variables.
-    Never hardcode credentials here - always use environment variables.
-    """
+    model_config = SettingsConfigDict(
+        env_file=(".env",),
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
 
-    # Application settings
     app_name: str = "Vibe Coded Protected API"
     debug: bool = False
-
-    # Database settings
-    # Format: postgresql://user:password@host:port/database
-    database_url: str
-
-    # Server settings
     host: str = "0.0.0.0"
     port: int = 8000
+    database_url: str  # required
+    postgres_user: str | None = None
+    postgres_password: str | None = None
+    postgres_db: str | None = None
 
-    model_config = {
-        "env_file": ".env",
-        "env_file_encoding": "utf-8",
-        "case_sensitive": False,
-    }
+    def __init__(self, **values: Any) -> None:
+        if os.getenv("PYTHON_DOTENV_DISABLED") == "1" and "_env_file" not in values:
+            values["_env_file"] = None
+        super().__init__(**values)
 
-
-@lru_cache()
+@lru_cache
 def get_settings() -> Settings:
-    """
-    Get cached settings instance.
-    This ensures we only read environment variables once.
-    """
     return Settings()

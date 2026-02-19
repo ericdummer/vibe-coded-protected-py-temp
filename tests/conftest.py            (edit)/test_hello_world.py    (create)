@@ -1,0 +1,12 @@
+def pytest_configure():
+    pass
+
+def pytest_unconfigure():
+    pass
+
+def sample_fixture():
+    return "Hello, World!"
+
+
+def test_hello_world():
+    assert sample_fixture() == "Hello, World!"
