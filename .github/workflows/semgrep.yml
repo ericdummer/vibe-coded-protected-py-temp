@@ -1,0 +1,41 @@
+name: Semgrep Security Scan
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run daily at 3 AM UTC
+    - cron: '0 3 * * *'
+
+jobs:
+  semgrep:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install Semgrep
+      run: |
+        python -m pip install --upgrade pip
+        pip install semgrep
+
+    - name: Run Semgrep and generate SARIF
+      run: semgrep scan --config auto --sarif --output semgrep.sarif
+
+    - name: Upload Semgrep results to GitHub Security tab
+      if: ${{ !env.ACT }}
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: semgrep.sarif
