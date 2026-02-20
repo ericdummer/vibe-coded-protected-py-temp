@@ -1,6 +1,7 @@
 # Quick Setup Guide
 
-This guide will help you get started with the Vibe Coded Protected FastAPI application.
+This document is the source of truth for local setup, running, testing, and troubleshooting.
+For a project overview and architecture summary, see [README.md](README.md).
 
 ## First Time Setup
 
@@ -15,23 +16,30 @@ This guide will help you get started with the Vibe Coded Protected FastAPI appli
    cp .env.example .env
    ```
    
-   Edit `.env` and update the values as needed. For local development, the default values in `.env.example` are fine.
+   Edit `.env` and update values as needed. Local defaults from `.env.example` are suitable for development.
 
 3. **Start the application with Docker Compose**:
    ```bash
    docker compose up --build
    ```
    
-   This will:
-   - Build the FastAPI application container
-   - Start PostgreSQL database
-   - Start the FastAPI application on http://localhost:8000
+   This command builds the FastAPI container and starts both API + PostgreSQL.
 
 4. **Access the application**:
    - API: http://localhost:8000
    - Interactive API docs: http://localhost:8000/docs
    - ReDoc documentation: http://localhost:8000/redoc
    - Health check: http://localhost:8000/health
+
+5. **Stop services when needed**:
+   ```bash
+   docker compose down
+   ```
+
+   Remove volumes too (deletes local DB data):
+   ```bash
+   docker compose down -v
+   ```
 
 ## Development Workflow
 
@@ -69,70 +77,6 @@ export DATABASE_URL="postgresql://vibeuser:vibepass@localhost:5432/vibedb"
 # Run the application
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
-
-### Stopping the Application
-
-```bash
-# Stop Docker Compose services
-docker compose down
-
-# Stop and remove volumes (this will delete the database data)
-docker compose down -v
-```
-
-## GitHub Copilot Instructions
-
-This project includes comprehensive GitHub Copilot instructions in `.github/copilot-instructions.md`. These ensure that:
-- Code follows FastAPI best practices
-- Credentials are never stored in code
-- Environment variables are properly used
-- Security standards are maintained
-
-GitHub Copilot will automatically use these instructions when suggesting code.
-
-## GitHub Actions CI/CD
-
-This repository includes automated workflows:
-
-### Unit Tests (`.github/workflows/tests.yml`)
-- Runs on every push and pull request
-- Sets up PostgreSQL database
-- Runs all tests with pytest
-- Reports test coverage
-
-### Trivy Security Scan (`.github/workflows/trivy.yml`)
-- Scans code and Docker images for vulnerabilities
-- Runs on push, pull requests, and daily schedule
-- Reports findings to GitHub Security tab
-
-## Project Structure
-
-```
-vibe-coded-protected/
-├── app/                    # Application code
-│   ├── api/               # API routes
-│   ├── core/              # Core functionality (config)
-│   ├── db/                # Database setup
-│   ├── models/            # Database models
-│   └── main.py            # Application entry point
-├── tests/                 # Test files
-├── .github/               # GitHub specific files
-│   ├── workflows/         # CI/CD workflows
-│   └── copilot-instructions.md  # Copilot guidelines
-├── .env.example           # Environment variables template
-├── docker-compose.yml     # Docker services
-├── Dockerfile             # Application container
-├── requirements.txt       # Python dependencies
-└── README.md              # Main documentation
-```
-
-## Adding New Features
-
-1. **Create a new route** in `app/api/routes.py` or create a new router file
-2. **Add tests** in `tests/` directory
-3. **Run tests locally** to ensure they pass
-4. **Commit and push** - CI/CD will run automatically
-5. **Review** Trivy security scan results in GitHub Security tab
 
 ## Security Best Practices
 
@@ -177,14 +121,14 @@ docker compose up --build
 
 ## Next Steps
 
-1. Read the full [README.md](README.md) for detailed documentation
-2. Review [GitHub Copilot Instructions](.github/copilot-instructions.md)
-3. Check [GitHub Actions workflows](.github/workflows/)
-4. Start building your API!
+1. Read [README.md](README.md) for project overview and current architecture.
+2. Review [GitHub Copilot Instructions](.github/copilot-instructions.md).
+3. Check CI workflows in [.github/workflows](.github/workflows).
+4. Start building your API.
 
 ## Support
 
 For issues and questions:
-- Check the README.md
-- Review GitHub Copilot instructions
+- Check [README.md](README.md)
+- Review [GitHub Copilot Instructions](.github/copilot-instructions.md)
 - Open an issue on GitHub
