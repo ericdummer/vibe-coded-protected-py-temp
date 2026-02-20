@@ -1,0 +1,231 @@
+name: pip-audit
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  pip-audit:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install pip-audit
+        run: |
+          python -m pip install --upgrade pip
+          pip install pip-audit
+
+      - name: Run pip-audit (JSON)
+        id: audit
+        continue-on-error: true
+        run: |
+          pip-audit -r requirements.txt --format json --output pip-audit.json || true
+
+      - name: Analyze audit results
+        id: analyze
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+
+            const reportPath = 'pip-audit.json';
+            if (!fs.existsSync(reportPath)) {
+              core.setOutput('critical_count', '0');
+              core.setOutput('total_count', '0');
+              core.setOutput('markdown', '### pip-audit\n\nNo report file was produced.');
+              return;
+            }
+
+            const raw = fs.readFileSync(reportPath, 'utf8').trim();
+            if (!raw) {
+              core.setOutput('critical_count', '0');
+              core.setOutput('total_count', '0');
+              core.setOutput('markdown', '### pip-audit\n\nReport was empty.');
+              return;
+            }
+
+            let data;
+            try {
+              data = JSON.parse(raw);
+            } catch (error) {
+              core.setOutput('critical_count', '0');
+              core.setOutput('total_count', '0');
+              core.setOutput('markdown', `### pip-audit\n\nFailed to parse JSON report: ${error.message}`);
+              return;
+            }
+
+            const deps = Array.isArray(data)
+              ? data
+              : Array.isArray(data.dependencies)
+                ? data.dependencies
+                : [];
+
+            const findings = [];
+            for (const dep of deps) {
+              const packageName = dep.name || 'unknown';
+              const packageVersion = dep.version || 'unknown';
+              const vulns = Array.isArray(dep.vulns)
+                ? dep.vulns
+                : Array.isArray(dep.vulnerabilities)
+                  ? dep.vulnerabilities
+                  : [];
+
+              for (const vuln of vulns) {
+                findings.push({
+                  packageName,
+                  packageVersion,
+                  id: vuln.id || vuln.vuln_id || 'unknown',
+                  fixVersions: Array.isArray(vuln.fix_versions) ? vuln.fix_versions : [],
+                  vuln,
+                });
+              }
+            }
+
+            const hasCriticalText = (value) => {
+              if (!value) return false;
+              if (typeof value === 'string') return value.toLowerCase().includes('critical');
+              if (Array.isArray(value)) return value.some(hasCriticalText);
+              if (typeof value === 'object') return Object.values(value).some(hasCriticalText);
+              return false;
+            };
+
+            const osvCache = new Map();
+
+            const fetchOsv = async (id) => {
+              if (!id || id === 'unknown') return null;
+              if (osvCache.has(id)) return osvCache.get(id);
+
+              try {
+                const response = await fetch(`https://api.osv.dev/v1/vulns/${encodeURIComponent(id)}`);
+                if (!response.ok) {
+                  osvCache.set(id, null);
+                  return null;
+                }
+                const payload = await response.json();
+                osvCache.set(id, payload);
+                return payload;
+              } catch {
+                osvCache.set(id, null);
+                return null;
+              }
+            };
+
+            const criticalFindings = [];
+            for (const finding of findings) {
+              let isCritical = false;
+
+              if (hasCriticalText(finding.vuln)) {
+                isCritical = true;
+              } else {
+                const osvPayload = await fetchOsv(finding.id);
+                if (osvPayload && hasCriticalText(osvPayload)) {
+                  isCritical = true;
+                }
+              }
+
+              if (isCritical) {
+                criticalFindings.push(finding);
+              }
+            }
+
+            const totalCount = findings.length;
+            const criticalCount = criticalFindings.length;
+
+            const maxRows = 20;
+            const rows = findings.slice(0, maxRows).map((finding) => {
+              const fixes = finding.fixVersions.length > 0 ? finding.fixVersions.join(', ') : 'n/a';
+              const criticalMark = criticalFindings.some((item) => item.id === finding.id && item.packageName === finding.packageName)
+                ? 'yes'
+                : 'no';
+              return `| ${finding.packageName} | ${finding.packageVersion} | ${finding.id} | ${criticalMark} | ${fixes} |`;
+            });
+
+            const summaryLines = [
+              '### pip-audit results',
+              '',
+              `- Total vulnerabilities: **${totalCount}**`,
+              `- Critical vulnerabilities: **${criticalCount}**`,
+              '',
+              criticalCount > 0
+                ? ':x: This check fails because critical vulnerabilities were detected.'
+                : ':white_check_mark: No critical vulnerabilities detected.',
+              '',
+            ];
+
+            if (rows.length > 0) {
+              summaryLines.push('| Package | Version | Vulnerability | Critical | Fix versions |');
+              summaryLines.push('|---|---|---|---|---|');
+              summaryLines.push(...rows);
+              if (totalCount > maxRows) {
+                summaryLines.push('');
+                summaryLines.push(`_Showing first ${maxRows} of ${totalCount} vulnerabilities._`);
+              }
+            } else {
+              summaryLines.push('No vulnerabilities were reported by pip-audit.');
+            }
+
+            core.setOutput('critical_count', String(criticalCount));
+            core.setOutput('total_count', String(totalCount));
+            core.setOutput('markdown', summaryLines.join('\n'));
+
+      - name: Add result to PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v8
+        env:
+          REPORT_MARKDOWN: ${{ steps.analyze.outputs.markdown }}
+        with:
+          script: |
+            const marker = '<!-- pip-audit-report -->';
+            const body = `${marker}\n${process.env.REPORT_MARKDOWN || 'pip-audit report unavailable.'}`;
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+
+            const existing = comments.find((comment) =>
+              comment.user.type === 'Bot' && comment.body && comment.body.includes(marker)
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body,
+              });
+            }
+
+      - name: Fail on critical vulnerabilities
+        if: always()
+        run: |
+          CRITICAL_COUNT='${{ steps.analyze.outputs.critical_count }}'
+          echo "Critical vulnerabilities found: ${CRITICAL_COUNT}"
+          if [ "${CRITICAL_COUNT}" -gt 0 ]; then
+            echo "Failing workflow due to critical vulnerabilities."
+            exit 1
+          fi
