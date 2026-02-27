@@ -19,14 +19,34 @@
 	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
 	"customizations": {
 		"vscode": {
+			"settings": {
+				"sonarlint.connectedMode.project": {
+					"connectionId": "ericdummer",
+					"projectKey": "ericdummer_vibe-coded-protected"
+				},
+				"sonarlint.connectedMode.connections.sonarcloud": [
+					{
+						"organizationKey": "ericdummer"
+					}
+				]
+			},
 			"extensions": [
 				"ms-python.python",
-				"ms-python.vscode-pylance"
+				"ms-python.vscode-pylance",
+				"SonarSource.sonarlint-vscode"
 			]
 		}
 	},
 	"forwardPorts": [8000, 5432],
 	"features": {
+		// Required by SonarQube for IDE: runs the Sonar language server.
+		"ghcr.io/devcontainers/features/java:1": {
+			"version": "17"
+		},
+		// Required by SonarQube for IDE: analyzes JavaScript/TypeScript using Node.
+		"ghcr.io/devcontainers/features/node:1": {
+			"version": "22"
+		},
 		"ghcr.io/devcontainers/features/python:1": {},
 		"ghcr.io/eitsupi/devcontainer-features/jq-likes:2": {},
 		"ghcr.io/guiyomh/features/vim:0": {},

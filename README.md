@@ -4,11 +4,28 @@ FastAPI + PostgreSQL reference project focused on secure defaults, clear configu
 
 ## Start Here
 
-For all setup, run, test, and troubleshooting commands, use [SETUP.md](SETUP.md).
+Choose one setup path:
 
-- Quick setup and first run: [SETUP.md](SETUP.md)
-- Local and Docker test commands: [SETUP.md](SETUP.md)
-- Troubleshooting common issues: [SETUP.md](SETUP.md)
+- Option 1 (standard): use [SETUP.md](SETUP.md) for setup, first run, testing, and troubleshooting.
+- Option 2 (VS Code Dev Container): use [.devcontainer/README.md](.devcontainer/README.md) to run everything inside a Dev Container.
+
+## SonarQube for IDE (Dev Container)
+
+When using this project in a Dev Container:
+
+- Use the `SonarQube for IDE` extension (`SonarSource.sonarlint-vscode`).
+- Authenticate with a SonarCloud token via the extension flow (do not store tokens in repo files).
+- Rebuild the container after `.devcontainer/devcontainer.json` changes.
+
+This repository's Dev Container includes:
+
+- Java (required to run SonarQube for IDE language server)
+- Node.js (required for JavaScript/TypeScript analysis)
+
+If analysis does not start, verify inside the container:
+
+- `java -version`
+- `node -v`
 
 ## Current Application State
 
