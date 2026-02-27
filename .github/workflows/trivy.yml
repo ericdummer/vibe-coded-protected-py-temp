@@ -37,15 +37,6 @@ jobs:
       uses: github/codeql-action/upload-sarif@v4
       with:
         sarif_file: 'trivy-results.sarif'
-        
-    - name: Run Trivy vulnerability scanner in table format
-      if: ${{ env.ACT }}
-      uses: aquasecurity/trivy-action@master
-      with:
-        scan-type: 'fs'
-        scan-ref: '.'
-        format: 'table'
-        severity: 'CRITICAL,HIGH,MEDIUM'
 
   trivy-docker-scan:
     runs-on: ubuntu-latest
@@ -77,12 +68,3 @@ jobs:
       uses: github/codeql-action/upload-sarif@v4
       with:
         sarif_file: 'trivy-docker-results.sarif'
-        
-    - name: Run Trivy Docker scan in table format
-      if: ${{ env.ACT }}
-      uses: aquasecurity/trivy-action@master
-      with:
-        scan-type: 'image'
-        image-ref: 'vibe-app:${{ github.sha }}'
-        format: 'table'
-        severity: 'CRITICAL,HIGH,MEDIUM'
