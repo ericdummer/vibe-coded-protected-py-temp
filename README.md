@@ -41,6 +41,23 @@ GitHub Actions workflows in [.github/workflows](.github/workflows):
 - [codeql.yml](.github/workflows/codeql.yml): CodeQL analysis
 - [sonarqube-cloud.yml](.github/workflows/sonarqube-cloud.yml): SonarQube Cloud code quality scan
 
+## SonarQube Cloud Setup
+
+This repository includes [sonarqube-cloud.yml](.github/workflows/sonarqube-cloud.yml) for SonarQube Cloud (free tier for public repositories).
+
+1. In SonarQube Cloud, create/import this GitHub repository.
+2. In SonarQube Cloud, copy:
+	- Organization key
+	- Project key
+3. In GitHub repository settings, add Actions variables:
+	- `SONAR_ORGANIZATION` = your SonarQube Cloud organization key
+	- `SONAR_PROJECT_KEY` = your SonarQube Cloud project key
+4. In SonarQube Cloud, create a user token.
+5. In GitHub repository settings, add Actions secret:
+	- `SONAR_TOKEN` = your SonarQube Cloud user token
+
+After these are set, push a commit or run the workflow manually from the Actions tab.
+
 ## Repository Layout
 
 ```
