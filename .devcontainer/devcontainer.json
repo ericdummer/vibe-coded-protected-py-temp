@@ -43,7 +43,8 @@
 			"installZsh": true,
 			"upgradePackages": true
 		}
-	}
+	},
+	"postCreateCommand": "python -m pip install --user --break-system-packages ruff"
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
@@ -57,8 +58,7 @@
 	// Uncomment the next line if you want to keep your containers running after VS Code shuts down.
 	// "shutdownAction": "none",
 
-	// Uncomment the next line to run commands after the container is created.
-	// "postCreateCommand": "cat /etc/os-release",
+	// Command run after the container is created.
 
 	// Configure tool-specific properties.
 	// "customizations": {},

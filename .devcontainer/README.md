@@ -27,6 +27,7 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ## Tooling Included for IDE Analysis
 
 - Python (runtime and language tooling)
+- Ruff (installed in the Dev Container via `postCreateCommand`)
 - Java 17 feature (required by SonarQube for IDE language server)
 - Node.js 22 feature (required by SonarQube for IDE JS/TS analysis)
 - VS Code extensions include:
@@ -45,3 +46,9 @@ node -v
 
 - If Dev Container config changes are not applied, run:
   - `Dev Containers: Rebuild Container`
+
+- If `ruff` is missing, run:
+
+```bash
+python -m pip install --user --break-system-packages ruff
+```
