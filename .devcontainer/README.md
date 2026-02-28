@@ -1,53 +1,47 @@
-# Using This Project in VS Code Dev Containers
+# Dev Container Reference
 
-Use this guide when you want VS Code to run the project inside a Dev Container instead of running commands directly on your host machine.
+For the user-facing setup flow, use [setup/dev-container/README.md](../setup/dev-container/README.md).
 
-## Prerequisites
+This file documents Dev Container-specific behavior in this repository.
 
-- Docker Desktop (or Docker Engine) running
-- Visual Studio Code
-- VS Code extension: `Dev Containers` (`ms-vscode-remote.remote-containers`)
+## Container Configuration Summary
 
-## Open in a Dev Container
+- Primary service: `web` (from root `docker-compose.yml`)
+- Compose files used by Dev Containers:
+  - `../docker-compose.yml`
+  - `./docker-compose.yml` (override)
+- Workspace mount: repository mounted under `/workspaces/...`
+- Forwarded ports: `8000` (API), `5432` (PostgreSQL)
 
-1. Open this repository in VS Code.
-2. Run Command Palette (`Cmd+Shift+P` on macOS, `Ctrl+Shift+P` on Linux/Windows).
-3. Select `Dev Containers: Reopen in Container`.
-4. Wait for the container build/start to complete.
+## Runtime Behavior in Dev Container
 
-## Start the App Inside the Container
-
-In the VS Code terminal (inside the container):
+- The override sets `command: sleep infinity` so the container stays running for interactive development.
+- Start the API manually from the container terminal:
 
 ```bash
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-The Dev Container Compose override loads default local values from `.env.example` automatically for minimal manual setup.
-For real environments, provide secrets via `.env` or your secret manager and never commit sensitive values.
+- Environment defaults are loaded from `.env.example` via Compose in this setup.
 
-Then open:
+## Tooling Included for IDE Analysis
 
-- API: http://localhost:8000
-- Docs: http://localhost:8000/docs
-- Health: http://localhost:8000/health
+- Python (runtime and language tooling)
+- Java 17 feature (required by SonarQube for IDE language server)
+- Node.js 22 feature (required by SonarQube for IDE JS/TS analysis)
+- VS Code extensions include:
+  - `ms-python.python`
+  - `ms-python.vscode-pylance`
+  - `SonarSource.sonarlint-vscode`
 
-## SonarQube for IDE Notes
+## Troubleshooting
 
-This Dev Container installs Java and Node because SonarQube for IDE needs:
-
-- Java for the language server runtime
-- Node.js for JavaScript/TypeScript analysis
-
-If Sonar analysis does not start, run:
+- If Sonar analysis does not start, verify:
 
 ```bash
 java -version
 node -v
 ```
 
-## Rebuild After Config Changes
-
-If `.devcontainer/devcontainer.json` changes, run:
-
-- `Dev Containers: Rebuild Container`
+- If Dev Container config changes are not applied, run:
+  - `Dev Containers: Rebuild Container`

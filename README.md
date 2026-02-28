@@ -6,34 +6,11 @@ FastAPI + PostgreSQL reference project focused on secure defaults, clear configu
 
 Choose one setup path:
 
-- Option 1 (standard): use [SETUP.md](SETUP.md) for setup, first run, testing, and troubleshooting.
-- Option 2 (VS Code Dev Container): use [.devcontainer/README.md](.devcontainer/README.md) to run everything inside a Dev Container.
+- Local install (optionally with a virtual environment): [setup/local-install/README.md](setup/local-install/README.md)
+- Docker Compose: [setup/docker-compose/README.md](setup/docker-compose/README.md)
+- VS Code Dev Container: [setup/dev-container/README.md](setup/dev-container/README.md)
 
-## Setup Paths (Quick View)
-
-| Path | Best for | Required manual steps | Defaults source |
-|---|---|---|---|
-| Standard local (Docker Compose) | Running directly from host shell/IDE | Copy `.env.example` to `.env` and adjust values as needed | `.env` (typically created from `.env.example`) |
-| VS Code Dev Container | Isolated, reproducible dev environment | Reopen in container, then run `uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload` | `.env.example` loaded by devcontainer compose override |
-
-## SonarQube for IDE (Dev Container)
-
-When using this project in a Dev Container:
-
-- Use the `SonarQube for IDE` extension (`SonarSource.sonarlint-vscode`).
-- Authenticate with a SonarCloud token via the extension flow (do not store tokens in repo files).
-- Rebuild the container after `.devcontainer/devcontainer.json` changes.
-
-This repository's Dev Container includes:
-
-- Java (required to run SonarQube for IDE language server)
-- Node.js (required for JavaScript/TypeScript analysis)
-- Environment defaults loaded from `.env.example` via Docker Compose overrides for low-friction local startup (replace with real secrets outside local dev)
-
-If analysis does not start, verify inside the container:
-
-- `java -version`
-- `node -v`
+For a setup index, see [SETUP.md](SETUP.md).
 
 ## Current Application State
 
