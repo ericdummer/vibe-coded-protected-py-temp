@@ -37,9 +37,9 @@ GitHub Actions workflows in [.github/workflows](.github/workflows):
 
 - [tests.yml](.github/workflows/tests.yml): unit tests and coverage
 - [ruff.yml](.github/workflows/ruff.yml): lint and format checks
-- [pip-audit.yml](.github/workflows/pip-audit.yml): dependency vulnerability audit with PR markdown report
 - [trivy.yml](.github/workflows/trivy.yml): filesystem and container vulnerability scans
 - [codeql.yml](.github/workflows/codeql.yml): CodeQL analysis
+- [sonarqube-cloud.yml](.github/workflows/sonarqube-cloud.yml): SonarQube Cloud code quality scan
 
 ## Repository Layout
 
