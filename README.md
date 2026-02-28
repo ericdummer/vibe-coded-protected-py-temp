@@ -39,24 +39,17 @@ GitHub Actions workflows in [.github/workflows](.github/workflows):
 - [ruff.yml](.github/workflows/ruff.yml): lint and format checks
 - [trivy.yml](.github/workflows/trivy.yml): filesystem and container vulnerability scans
 - [codeql.yml](.github/workflows/codeql.yml): CodeQL analysis
-- [sonarqube-cloud.yml](.github/workflows/sonarqube-cloud.yml): SonarQube Cloud code quality scan
 
-## SonarQube Cloud Setup
+## Sonar Configuration
 
-This repository includes [sonarqube-cloud.yml](.github/workflows/sonarqube-cloud.yml) for SonarQube Cloud (free tier for public repositories).
+Sonar scanner settings are defined in [sonar-project.properties](sonar-project.properties):
 
-1. In SonarQube Cloud, create/import this GitHub repository.
-2. In SonarQube Cloud, copy:
-	- Organization key
-	- Project key
-3. In GitHub repository settings, add Actions variables:
-	- `SONAR_ORGANIZATION` = your SonarQube Cloud organization key
-	- `SONAR_PROJECT_KEY` = your SonarQube Cloud project key
-4. In SonarQube Cloud, create a user token.
-5. In GitHub repository settings, add Actions secret:
-	- `SONAR_TOKEN` = your SonarQube Cloud user token
+- `sonar.sources=app`: scans application source files under `app/`
+- `sonar.tests=tests`: identifies test files under `tests/`
+- `sonar.python.version=3.11`: pins analysis to the project Python version
+- `sonar.python.coverage.reportPaths=coverage.xml`: imports pytest coverage results
 
-After these are set, push a commit or run the workflow manually from the Actions tab.
+This `sonar.python.version` setting is the recommended fix for the SonarCloud warning about default compatibility with all Python versions.
 
 ## Repository Layout
 
