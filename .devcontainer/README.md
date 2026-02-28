@@ -20,9 +20,11 @@ Use this guide when you want VS Code to run the project inside a Dev Container i
 In the VS Code terminal (inside the container):
 
 ```bash
-cp .env.example .env
-docker compose up --build
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
+
+The Dev Container Compose override loads default local values from `.env.example` automatically for minimal manual setup.
+For real environments, provide secrets via `.env` or your secret manager and never commit sensitive values.
 
 Then open:
 

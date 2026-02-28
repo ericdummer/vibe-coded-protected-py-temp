@@ -19,17 +19,6 @@
 	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
 	"customizations": {
 		"vscode": {
-			"settings": {
-				"sonarlint.connectedMode.project": {
-					"connectionId": "ericdummer",
-					"projectKey": "ericdummer_vibe-coded-protected"
-				},
-				"sonarlint.connectedMode.connections.sonarcloud": [
-					{
-						"organizationKey": "ericdummer"
-					}
-				]
-			},
 			"extensions": [
 				"ms-python.python",
 				"ms-python.vscode-pylance",

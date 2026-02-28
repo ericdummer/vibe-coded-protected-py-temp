@@ -17,6 +17,8 @@ For a project overview and architecture summary, see [README.md](README.md).
    ```
    
    Edit `.env` and update values as needed. Local defaults from `.env.example` are suitable for development.
+   
+   If you use VS Code Dev Containers, see [.devcontainer/README.md](.devcontainer/README.md): the devcontainer compose override already loads `.env.example` defaults and you start the app inside the container with `uvicorn`.
 
 3. **Start the application with Docker Compose**:
    ```bash
@@ -55,8 +57,11 @@ docker compose run web pytest tests/ -v
 # Install dependencies
 pip install -r requirements.txt
 
-# Set environment variable
-export DATABASE_URL="postgresql://testuser:testpass@localhost:5432/testdb"
+# Set environment variables
+export POSTGRES_USER="${POSTGRES_USER:-vibeuser}"
+export POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-vibepass}"
+export POSTGRES_DB="${POSTGRES_DB:-vibedb}"
+export DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB}"
 
 # Run tests
 pytest tests/ -v
@@ -72,7 +77,10 @@ pytest tests/ --cov=app --cov-report=term-missing
 pip install -r requirements.txt
 
 # Set required environment variables
-export DATABASE_URL="postgresql://vibeuser:vibepass@localhost:5432/vibedb"
+export POSTGRES_USER="${POSTGRES_USER:-vibeuser}"
+export POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-vibepass}"
+export POSTGRES_DB="${POSTGRES_DB:-vibedb}"
+export DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB}"
 
 # Run the application
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000

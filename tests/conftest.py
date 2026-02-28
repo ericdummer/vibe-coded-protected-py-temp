@@ -27,10 +27,17 @@ def test_settings():
     """
     from app.core.config import Settings
 
+    postgres_user = os.getenv("POSTGRES_USER")
+    postgres_password = os.getenv("POSTGRES_PASSWORD")
+    postgres_db = os.getenv("POSTGRES_DB")
+
     return Settings(
-        database_url="postgresql://testuser:testpass@localhost:5432/testdb",
+        database_url=os.getenv(
+            "DATABASE_URL",
+            "sqlite:///./test.db",
+        ),
         debug=True,
-        postgres_user="a",
-        postgres_password="a",
-        postgres_db="l",
+        postgres_user=postgres_user,
+        postgres_password=postgres_password,
+        postgres_db=postgres_db,
     )
