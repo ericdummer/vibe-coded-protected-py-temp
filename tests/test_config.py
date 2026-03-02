@@ -19,8 +19,6 @@ REQUIRED_ENV_VARS = (
 def _clear_settings_cache() -> None:
     """Ensure get_settings() cache does not leak between tests."""
     get_settings.cache_clear()
-    yield
-    get_settings.cache_clear()
 
 
 @pytest.fixture
