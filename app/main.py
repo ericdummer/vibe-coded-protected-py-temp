@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from app.core.config import get_settings
 from app.api.routes import router
+from app.api.mcp import router as mcp_router
 
 settings = get_settings()
 
@@ -27,6 +28,7 @@ app = FastAPI(
 
 # Include routers
 app.include_router(router, tags=["general"])
+app.include_router(mcp_router, prefix="/mcp", tags=["mcp"])
 
 
 if __name__ == "__main__":
