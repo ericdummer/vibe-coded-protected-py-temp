@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Infrastructure Diagram — vibe-coded-protected</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f1117;
+      color: #e1e4e8;
+      margin: 0;
+      padding: 24px;
+    }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    p  { font-size: 0.85rem; color: #8b949e; margin-top: 0; margin-bottom: 24px; }
+    .mermaid {
+      background: #161b22;
+      border-radius: 8px;
+      padding: 32px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Infrastructure Diagram — vibe-coded-protected</h1>
+  <p>Generated from <code>terraform/</code> — EC2 launch-type path shown; Fargate path omits ASG/CapacityProvider</p>
+
+  <div class="mermaid">
+graph TB
+    classDef internet  fill:#1f6feb,stroke:#388bfd,color:#fff
+    classDef aws_net   fill:#0d4a6e,stroke:#1f6feb,color:#cdd9e5
+    classDef compute   fill:#1a4731,stroke:#2ea043,color:#cdd9e5
+    classDef data      fill:#3d2c00,stroke:#d29922,color:#cdd9e5
+    classDef observ    fill:#2d1a4a,stroke:#8957e5,color:#cdd9e5
+    classDef iam       fill:#3d1515,stroke:#f85149,color:#cdd9e5
+    classDef optional  fill:#1c2128,stroke:#484f58,color:#8b949e,stroke-dasharray:5 5
+
+    User(["👤 Users"]):::internet
+
+    subgraph DNS_Layer["DNS (optional)"]
+        R53["Route 53\nA-Alias Record\n↳ domain_name"]:::optional
+    end
+
+    subgraph WAF_Layer["WAF Protection (enable_waf = true)"]
+        WAF["WAFv2 Web ACL\n① IP Reputation List\n② Common Rule Set\n③ Known Bad Inputs\n④ Rate Limit — 1 000 req / IP"]:::aws_net
+    end
+
+    subgraph VPC["VPC  (existing — vpc_id)"]
+        direction TB
+
+        subgraph PublicSubnets["Public Subnets  (public_subnet_ids)"]
+            ALB["Application Load Balancer\nPort 80 → 301 HTTPS redirect\nPort 443 → target group\nSG: alb-sg  (0.0.0.0/0 → 80, 443)"]:::aws_net
+        end
+
+        subgraph PrivateSubnets["Private Subnets  (private_subnet_ids)"]
+            TG["Target Group\nProtocol: HTTP | Port: 8000\nHealth: GET /health (200-399)"]:::aws_net
+
+            subgraph ECSCluster["ECS Cluster  (Container Insights enabled)"]
+                direction TB
+                ECSService["ECS Service\nDesired: 2 tasks | Min: 2 | Max: 6\nCircuit Breaker + Rollback ✓\nECS Exec enabled"]:::compute
+                TaskDef["Task Definition\nCPU: 512 u | Mem: 1 024 MiB\nNetwork: awsvpc\nSG: ecs-tasks-sg  (ALB → 8000)"]:::compute
+                AppScale["App Auto Scaling\nCPU target 60 %\nMemory target 70 %"]:::compute
+
+                subgraph EC2Path["EC2 Launch Type  (ecs_launch_type = EC2)"]
+                    ASG["Auto Scaling Group\nt3.small | IMDSv2 | gp3 30 GiB enc\nDesired: 2 | Min: 2 | Max: 4\nSG: ecs-instances-sg"]:::compute
+                    CP["ECS Capacity Provider\nManaged Scaling — 100 % target\nStep: 1–10"]:::compute
+                end
+            end
+
+            RDS["RDS PostgreSQL 16\ndb.t4g.micro | gp3\n20 GiB → autoscale up to 100 GiB\nEncrypted | Backups: 7 days\nDeletion protection ✓\nSG: db-sg  (ECS Tasks → 5432)"]:::data
+        end
+    end
+
+    subgraph AWSManaged["AWS Managed Services"]
+        ECR["ECR Repository\nImage scanning on push\nLifecycle: keep 30 tags"]:::compute
+        SM["Secrets Manager\nDATABASE_URL  (postgresql://…)\nRecovery window: 7 days"]:::data
+        CWLogs["CloudWatch Logs\n/ecs/project-env\nRetention: 30 days"]:::observ
+    end
+
+    subgraph Monitoring["Monitoring"]
+        CWAlarm1["CW Alarm\nECS CPU > 85 %\n2 × 60 s eval periods"]:::observ
+        CWAlarm2["CW Alarm\nALB 5XX count > 10\n1 × 60 s eval period"]:::observ
+        SNS["SNS Topic\n(alarm_topic_arn — optional)"]:::optional
+    end
+
+    subgraph IAMRoles["IAM"]
+        ExecRole["Task Execution Role\nAmazonECSTaskExecutionRolePolicy\n+ secretsmanager:GetSecretValue\n+ kms:Decrypt"]:::iam
+        TaskRole["Task Role\n(extensible)"]:::iam
+        InstRole["Instance Role  (EC2 only)\nAmazonEC2ContainerServiceforEC2Role\nAmazonSSMManagedInstanceCore"]:::iam
+    end
+
+    %% Traffic flow
+    User -- "HTTPS" --> R53
+    R53 -. "Alias" .-> ALB
+    User -- "HTTPS/HTTP" --> WAF
+    WAF -- "filtered" --> ALB
+    ALB -- "forward" --> TG
+    TG -- ":8000" --> TaskDef
+    ECSService --> TaskDef
+    AppScale -- "scale" --> ECSService
+
+    %% EC2 path
+    TaskDef -- "EC2 launch" --> ASG
+    ASG <-- "capacity" --> CP
+    CP -- "manages" --> ECSService
+
+    %% App → services
+    TaskDef -- "pull image" --> ECR
+    TaskDef -- "read DATABASE_URL" --> SM
+    TaskDef -- "application logs" --> CWLogs
+    TaskDef -- ":5432 / TCP" --> RDS
+
+    %% IAM
+    TaskDef -- "assumes" --> ExecRole
+    TaskDef -- "assumes" --> TaskRole
+    ExecRole -- "reads" --> SM
+    ASG -- "instance profile" --> InstRole
+
+    %% Alarms
+    ECSService -. "metrics" .-> CWAlarm1
+    ALB -. "metrics" .-> CWAlarm2
+    CWAlarm1 --> SNS
+    CWAlarm2 --> SNS
+  </div>
+
+  <script>
+    mermaid.initialize({ startOnLoad: true, theme: "dark", securityLevel: "loose" });
+  </script>
+</body>
+</html>

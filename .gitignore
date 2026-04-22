@@ -209,6 +209,18 @@ __marimo__/
 # Docker
 docker-compose.override.yml
 
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
 # Database
 *.db
 *.sqlite

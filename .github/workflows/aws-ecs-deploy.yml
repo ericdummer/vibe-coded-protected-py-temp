@@ -1,0 +1,130 @@
+name: AWS ECS Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Deployment environment name
+        required: true
+        default: dev
+        type: string
+      terraform_action:
+        description: Terraform action to run
+        required: true
+        default: plan
+        type: choice
+        options:
+          - plan
+          - apply
+      registry:
+        description: Container registry to target
+        required: true
+        default: ecr
+        type: choice
+        options:
+          - ecr
+          - dockerhub
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  TF_VAR_aws_region: ${{ vars.AWS_REGION }}
+  TF_VAR_project_name: vibe-coded-protected
+  TF_VAR_environment: ${{ inputs.environment }}
+  TF_VAR_vpc_id: ${{ vars.AWS_VPC_ID }}
+  TF_VAR_public_subnet_ids: ${{ vars.AWS_PUBLIC_SUBNET_IDS_JSON }}
+  TF_VAR_private_subnet_ids: ${{ vars.AWS_PRIVATE_SUBNET_IDS_JSON }}
+  TF_VAR_db_subnet_ids: ${{ vars.AWS_DB_SUBNET_IDS_JSON }}
+  TF_VAR_route53_zone_id: ${{ vars.AWS_ROUTE53_ZONE_ID }}
+  TF_VAR_domain_name: ${{ vars.APP_DOMAIN_NAME }}
+  TF_VAR_acm_certificate_arn: ${{ vars.AWS_ACM_CERTIFICATE_ARN }}
+  TF_VAR_container_registry_type: ${{ inputs.registry }}
+  TF_VAR_container_image_tag: ${{ github.sha }}
+  TF_VAR_container_image_repository: ${{ vars.DOCKERHUB_REPOSITORY }}
+  TF_VAR_dockerhub_credentials_secret_arn: ${{ vars.DOCKERHUB_CREDENTIALS_SECRET_ARN }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      - name: Terraform fmt check
+        working-directory: terraform
+        run: terraform fmt -check -recursive
+
+      - name: Terraform init
+        working-directory: terraform
+        run: terraform init
+
+      - name: Terraform validate
+        working-directory: terraform
+        run: terraform validate
+
+      - name: Terraform plan
+        if: ${{ inputs.terraform_action == 'plan' }}
+        working-directory: terraform
+        run: terraform plan
+
+      - name: Terraform apply infrastructure
+        if: ${{ inputs.terraform_action == 'apply' }}
+        working-directory: terraform
+        run: terraform apply -auto-approve
+
+      - name: Set up Docker Buildx
+        if: ${{ inputs.terraform_action == 'apply' }}
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Amazon ECR
+        if: ${{ inputs.terraform_action == 'apply' && inputs.registry == 'ecr' }}
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Capture ECR image target
+        if: ${{ inputs.terraform_action == 'apply' && inputs.registry == 'ecr' }}
+        working-directory: terraform
+        run: echo "IMAGE_URI=$(terraform output -raw ecr_repository_url):${GITHUB_SHA}" >> "$GITHUB_ENV"
+
+      - name: Log in to Docker Hub
+        if: ${{ inputs.terraform_action == 'apply' && inputs.registry == 'dockerhub' }}
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Capture Docker Hub image target
+        if: ${{ inputs.terraform_action == 'apply' && inputs.registry == 'dockerhub' }}
+        run: echo "IMAGE_URI=${{ vars.DOCKERHUB_REPOSITORY }}:${GITHUB_SHA}" >> "$GITHUB_ENV"
+
+      - name: Build and push container image
+        if: ${{ inputs.terraform_action == 'apply' }}
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ env.IMAGE_URI }}
+
+      - name: Force ECS service deployment
+        if: ${{ inputs.terraform_action == 'apply' }}
+        working-directory: terraform
+        run: |
+          aws ecs update-service \
+            --cluster "$(terraform output -raw ecs_cluster_name)" \
+            --service "$(terraform output -raw ecs_service_name)" \
+            --force-new-deployment
