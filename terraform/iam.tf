@@ -83,3 +83,23 @@ resource "aws_iam_instance_profile" "ecs" {
   name = "${local.name_prefix}-ecs-instance-profile"
   role = aws_iam_role.ecs_instance[0].name
 }
+
+data "aws_caller_identity" "current" {}
+
+resource "aws_iam_role_policy" "ecs_task_rds_iam_auth" {
+  count = var.db_use_iam_auth ? 1 : 0
+
+  name = "${local.name_prefix}-ecs-task-rds-iam-auth"
+  role = aws_iam_role.ecs_task.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = "rds-db:connect"
+        Resource = "arn:aws:rds-db:${var.aws_region}:${data.aws_caller_identity.current.account_id}:dbuser:${aws_db_instance.app.resource_id}/${var.app_db_username}"
+      }
+    ]
+  })
+}

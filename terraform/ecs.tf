@@ -81,9 +81,19 @@ resource "aws_autoscaling_group" "ecs" {
   vpc_zone_identifier = var.private_subnet_ids
   health_check_type   = "EC2"
 
-  launch_template {
-    id      = aws_launch_template.ecs[0].id
-    version = "$Latest"
+  mixed_instances_policy {
+    instances_distribution {
+      on_demand_base_capacity                  = 0
+      on_demand_percentage_above_base_capacity = lower(var.ec2_market_type) == "spot" ? 0 : 100
+      spot_allocation_strategy                 = "price-capacity-optimized"
+    }
+
+    launch_template {
+      launch_template_specification {
+        launch_template_id = aws_launch_template.ecs[0].id
+        version            = "$Latest"
+      }
+    }
   }
 
   tag {
@@ -157,16 +167,33 @@ resource "aws_ecs_task_definition" "app" {
           }
         ]
         environment = [
-          for key, value in merge(var.app_environment, { PORT = tostring(var.container_port) }) : {
+          for key, value in merge(var.app_environment, { PORT = tostring(var.container_port), AWS_REGION = var.aws_region, DB_IAM_AUTH = tostring(var.db_use_iam_auth) }) : {
             name  = key
             value = value
           }
         ]
-        secrets = [
+        secrets = var.db_use_iam_auth ? [
+          {
+            name      = "DB_HOST"
+            valueFrom = "${aws_secretsmanager_secret.app_database.arn}:host::"
+          },
+          {
+            name      = "DB_PORT"
+            valueFrom = "${aws_secretsmanager_secret.app_database.arn}:port::"
+          },
+          {
+            name      = "DB_NAME"
+            valueFrom = "${aws_secretsmanager_secret.app_database.arn}:dbname::"
+          },
+          {
+            name      = "DB_USER"
+            valueFrom = "${aws_secretsmanager_secret.app_database.arn}:username::"
+          },
+          ] : [
           {
             name      = "DATABASE_URL"
             valueFrom = "${aws_secretsmanager_secret.app_database.arn}:database_url::"
-          }
+          },
         ]
         logConfiguration = {
           logDriver = "awslogs"

@@ -5,7 +5,7 @@ resource "aws_lb" "app" {
   security_groups    = [aws_security_group.alb.id]
   subnets            = var.public_subnet_ids
 
-  enable_deletion_protection = false
+  enable_deletion_protection = var.alb_enable_deletion_protection
 
   tags = merge(local.common_tags, { Name = "${local.name_prefix}-alb" })
 }

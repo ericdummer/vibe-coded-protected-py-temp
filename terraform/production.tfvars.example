@@ -1,0 +1,62 @@
+aws_region        = "us-east-2"
+project_name      = "vibe-coded-protected"
+environment       = "prod"
+vpc_id            = "vpc-0123456789abcdef0"
+public_subnet_ids = ["subnet-11111111111111111", "subnet-22222222222222222"]
+private_subnet_ids = [
+  "subnet-33333333333333333",
+  "subnet-44444444444444444",
+]
+db_subnet_ids = [
+  "subnet-33333333333333333",
+  "subnet-44444444444444444",
+]
+
+ecs_launch_type           = "EC2"
+ec2_market_type           = "on-demand"
+container_registry_type   = "ecr"
+container_image_tag       = "stable"
+db_use_iam_auth           = true
+db_publicly_accessible    = false
+db_multi_az               = true
+db_deletion_protection    = true
+db_skip_final_snapshot    = false
+allowed_ingress_cidrs     = ["0.0.0.0/0"]
+egress_cidrs              = ["0.0.0.0/0"]
+
+app_environment = {
+  APP_NAME = "Vibe Coded Protected API"
+  DEBUG    = "false"
+}
+
+ecs_service_desired_count = 3
+ecs_service_min_capacity  = 3
+ecs_service_max_capacity  = 8
+
+ec2_instance_type    = "t3.small"
+ec2_desired_capacity = 3
+ec2_min_size         = 3
+ec2_max_size         = 6
+
+db_instance_class                  = "db.t4g.small"
+db_allocated_storage               = 40
+db_max_allocated_storage           = 200
+db_backup_retention_period         = 14
+db_performance_insights_enabled    = true
+cloudwatch_log_retention_in_days   = 30
+enable_waf                         = true
+waf_rate_limit                     = 1000
+
+alb_enable_deletion_protection = true
+
+# Restrict breakglass DB secret to specific admin IAM principals.
+# When set, a Secrets Manager resource policy is created that denies all other principals.
+# breakglass_allowed_principal_arns = ["arn:aws:iam::123456789012:user/ops-admin"]
+
+# SNS topic for CloudWatch alarm notifications — required for alerts to fire.
+# alarm_topic_arn = "arn:aws:sns:us-east-2:123456789012:prod-alerts"
+
+# HTTPS and DNS — acm_certificate_arn is required for HTTPS; without it the ALB serves plain HTTP.
+# acm_certificate_arn = "arn:aws:acm:us-east-2:123456789012:certificate/00000000-0000-0000-0000-000000000000"
+# route53_zone_id     = "Z0123456789ABCDEFG"
+# domain_name         = "api.example.com"

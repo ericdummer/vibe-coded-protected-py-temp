@@ -49,6 +49,12 @@ variable "allowed_ingress_cidrs" {
   default     = ["0.0.0.0/0"]
 }
 
+variable "egress_cidrs" {
+  description = "CIDR blocks allowed for outbound traffic from security groups."
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+}
+
 variable "route53_zone_id" {
   description = "Optional Route 53 hosted zone ID for an ALB alias record."
   type        = string
@@ -210,25 +216,36 @@ variable "wait_for_steady_state" {
 variable "ec2_instance_type" {
   description = "EC2 instance type for ECS on EC2."
   type        = string
-  default     = "t3.small"
+  default     = "t3.micro"
+}
+
+variable "ec2_market_type" {
+  description = "ECS EC2 capacity market type. Valid values are 'on-demand' and 'spot'."
+  type        = string
+  default     = "on-demand"
+
+  validation {
+    condition     = contains(["on-demand", "spot"], lower(var.ec2_market_type))
+    error_message = "ec2_market_type must be either 'on-demand' or 'spot'."
+  }
 }
 
 variable "ec2_desired_capacity" {
   description = "Desired ECS instance count in the backing Auto Scaling Group."
   type        = number
-  default     = 2
+  default     = 1
 }
 
 variable "ec2_min_size" {
   description = "Minimum ECS instance count in the backing Auto Scaling Group."
   type        = number
-  default     = 2
+  default     = 1
 }
 
 variable "ec2_max_size" {
   description = "Maximum ECS instance count in the backing Auto Scaling Group."
   type        = number
-  default     = 4
+  default     = 2
 }
 
 variable "ecs_optimized_ami_ssm_parameter" {
@@ -274,9 +291,15 @@ variable "db_name" {
 }
 
 variable "db_username" {
-  description = "PostgreSQL database username."
+  description = "PostgreSQL master database username used for the breakglass admin account."
   type        = string
   default     = "vibeapp"
+}
+
+variable "app_db_username" {
+  description = "PostgreSQL database username for the application (IAM authentication). Must be created post-provisioning via SQL grants."
+  type        = string
+  default     = "vibeapp_app"
 }
 
 variable "db_port" {
@@ -352,6 +375,12 @@ variable "db_performance_insights_enabled" {
   default     = false
 }
 
+variable "db_use_iam_auth" {
+  description = "Enable IAM database authentication for the application path. When false, the app uses DATABASE_URL with password auth."
+  type        = bool
+  default     = true
+}
+
 variable "db_secret_recovery_window_in_days" {
   description = "Secrets Manager recovery window in days for the generated DB secret."
   type        = number
@@ -369,6 +398,18 @@ variable "alarm_topic_arn" {
   type        = string
   default     = null
   nullable    = true
+}
+
+variable "alb_enable_deletion_protection" {
+  description = "Enable deletion protection on the ALB to prevent accidental destruction."
+  type        = bool
+  default     = false
+}
+
+variable "breakglass_allowed_principal_arns" {
+  description = "IAM principal ARNs allowed to read the breakglass database secret. When non-empty, a Secrets Manager resource policy is attached restricting access to only these principals."
+  type        = list(string)
+  default     = []
 }
 
 variable "enable_waf" {

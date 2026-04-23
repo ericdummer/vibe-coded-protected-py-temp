@@ -37,3 +37,9 @@ output "container_image" {
   description = "Full container image reference deployed to ECS."
   value       = local.container_image
 }
+
+output "breakglass_database_secret_arn" {
+  description = "Secrets Manager ARN containing breakglass admin database credentials. Restrict access via IAM."
+  value       = aws_secretsmanager_secret.breakglass_database.arn
+  sensitive   = true
+}

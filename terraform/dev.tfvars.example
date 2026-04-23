@@ -1,0 +1,48 @@
+aws_region        = "us-east-2"
+project_name      = "vibe-coded-protected"
+environment       = "dev"
+vpc_id            = "vpc-0123456789abcdef0"
+public_subnet_ids = ["subnet-11111111111111111", "subnet-22222222222222222"]
+private_subnet_ids = [
+  "subnet-33333333333333333",
+  "subnet-44444444444444444",
+]
+db_subnet_ids = [
+  "subnet-33333333333333333",
+  "subnet-44444444444444444",
+]
+
+ecs_launch_type           = "EC2"
+ec2_market_type           = "spot"
+db_use_iam_auth           = false
+db_publicly_accessible    = false
+container_registry_type   = "ecr"
+container_image_tag       = "dev"
+allowed_ingress_cidrs     = ["0.0.0.0/0"]
+egress_cidrs              = ["0.0.0.0/0"]
+
+app_environment = {
+  APP_NAME = "Vibe Coded Protected API"
+  DEBUG    = "true"
+}
+
+ecs_service_desired_count = 1
+ecs_service_min_capacity  = 1
+ecs_service_max_capacity  = 3
+
+ec2_instance_type    = "t3.micro"
+ec2_desired_capacity = 1
+ec2_min_size         = 1
+ec2_max_size         = 3
+
+db_instance_class               = "db.t4g.micro"
+db_allocated_storage            = 20
+db_max_allocated_storage        = 100
+db_backup_retention_period      = 7
+db_multi_az                     = false
+db_deletion_protection          = false
+db_skip_final_snapshot          = true
+db_performance_insights_enabled = false
+cloudwatch_log_retention_in_days = 14
+enable_container_insights       = false
+enable_waf                      = false
