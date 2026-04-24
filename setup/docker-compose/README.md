@@ -7,7 +7,15 @@ Use this path when you want to run the API and PostgreSQL together in containers
 - Docker Engine or Docker Desktop
 - Docker Compose (`docker compose`)
 
-## 1) Start services
+## 1) Configure environment variables
+
+Copy the example env file and edit it with your values:
+
+```bash
+cp .env.example .env
+```
+
+## 2) Start services
 
 From the repository root:
 
@@ -20,14 +28,14 @@ This starts:
 - `web` (FastAPI app)
 - `db` (PostgreSQL)
 
-## 2) Verify
+## 3) Verify
 
 - API: http://localhost:8000
 - Docs: http://localhost:8000/docs
 - ReDoc: http://localhost:8000/redoc
 - Health: http://localhost:8000/health
 
-## 3) Stop services
+## 4) Stop services
 
 ```bash
 docker compose down

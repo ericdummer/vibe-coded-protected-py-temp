@@ -17,6 +17,7 @@ ec2_market_type           = "spot"
 db_use_iam_auth           = false
 db_publicly_accessible    = false
 container_registry_type   = "ecr"
+ecr_force_delete          = true
 container_image_tag       = "dev"
 allowed_ingress_cidrs     = ["0.0.0.0/0"]
 egress_cidrs              = ["0.0.0.0/0"]

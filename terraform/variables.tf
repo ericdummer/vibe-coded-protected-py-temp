@@ -114,6 +114,12 @@ variable "ecr_repository_name" {
   nullable    = true
 }
 
+variable "ecr_force_delete" {
+  description = "Allow Terraform to delete the ECR repository even if it contains images. Enable for dev; leave false for production."
+  type        = bool
+  default     = false
+}
+
 variable "ecs_launch_type" {
   description = "ECS launch type to use. EC2 is recommended for instance-profile-first deployments."
   type        = string

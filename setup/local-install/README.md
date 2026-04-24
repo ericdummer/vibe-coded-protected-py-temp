@@ -23,6 +23,12 @@ pip install -r requirements.txt
 
 ## 3) Configure environment variables
 
+Copy the example env file and edit it with your values:
+
+```bash
+cp .env.example .env
+```
+
 Minimum required variable:
 
 - `DATABASE_URL`
