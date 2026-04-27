@@ -22,7 +22,6 @@ db_multi_az               = true
 db_deletion_protection    = true
 db_skip_final_snapshot    = false
 allowed_ingress_cidrs     = ["0.0.0.0/0"]
-egress_cidrs              = ["0.0.0.0/0"]
 
 app_environment = {
   APP_NAME = "Vibe Coded Protected API"

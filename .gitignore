@@ -209,12 +209,16 @@ __marimo__/
 # Docker
 docker-compose.override.yml
 
+# Trivy
+.trivy/
+
 # Terraform
 .terraform/
 *.tfstate
 *.tfstate.*
 *.tfvars
 !*.tfvars.example
+bootstrap-aws/*.tfvars*
 crash.log
 override.tf
 override.tf.json
