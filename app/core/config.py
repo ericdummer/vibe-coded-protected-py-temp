@@ -1,6 +1,7 @@
 import os
 from typing import Any
 from functools import lru_cache
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -25,6 +26,17 @@ class Settings(BaseSettings):
     postgres_user: str | None = None
     postgres_password: str | None = None
     postgres_db: str | None = None
+
+    @model_validator(mode="after")
+    def check_database_config(self) -> "Settings":
+        if self.database_url is None and not (
+            self.postgres_user and self.postgres_password and self.postgres_db
+        ):
+            raise ValueError(
+                "database_url or all of postgres_user, postgres_password, "
+                "postgres_db must be set"
+            )
+        return self
 
     def __init__(self, **values: Any) -> None:
         if os.getenv("PYTHON_DOTENV_DISABLED") == "1" and "_env_file" not in values:
