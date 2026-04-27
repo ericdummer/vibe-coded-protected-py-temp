@@ -20,7 +20,6 @@ container_registry_type   = "ecr"
 ecr_force_delete          = true
 container_image_tag       = "dev"
 allowed_ingress_cidrs     = ["0.0.0.0/0"]
-egress_cidrs              = ["0.0.0.0/0"]
 
 app_environment = {
   APP_NAME = "Vibe Coded Protected API"

@@ -49,11 +49,6 @@ variable "allowed_ingress_cidrs" {
   default     = ["0.0.0.0/0"]
 }
 
-variable "egress_cidrs" {
-  description = "CIDR blocks allowed for outbound traffic from security groups."
-  type        = list(string)
-  default     = ["0.0.0.0/0"]
-}
 
 variable "route53_zone_id" {
   description = "Optional Route 53 hosted zone ID for an ALB alias record."
@@ -257,7 +252,7 @@ variable "ec2_max_size" {
 variable "ecs_optimized_ami_ssm_parameter" {
   description = "SSM parameter name for the ECS-optimized AMI."
   type        = string
-  default     = "/aws/service/ecs/optimized-ami/amazon-linux-2/recommended/image_id"
+  default     = "/aws/service/ecs/optimized-ami/amazon-linux-2023/recommended/image_id"
 }
 
 variable "ecs_instance_root_volume_size" {
@@ -342,7 +337,7 @@ variable "db_engine_version" {
 variable "db_parameter_group_family" {
   description = "DB parameter group family."
   type        = string
-  default     = "postgres16"
+  default     = "postgres18"
 }
 
 variable "db_backup_retention_period" {
