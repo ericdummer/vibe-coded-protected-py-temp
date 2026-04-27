@@ -36,6 +36,7 @@ services:
       - "${WEB_PORT:-8000}:8000"
     volumes:
       - ./app:/app/app
+      - ./tests:/app/tests
     depends_on:
       db:
         condition: service_healthy
