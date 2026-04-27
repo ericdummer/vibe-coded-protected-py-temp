@@ -64,6 +64,39 @@ resource "aws_vpc_endpoint" "ecr_dkr" {
   tags                = merge(local.common_tags, { Name = "${local.name_prefix}-ecr-dkr-endpoint" })
 }
 
+resource "aws_vpc_endpoint" "ecs" {
+  count               = local.use_ec2 ? 1 : 0
+  vpc_id              = data.aws_vpc.selected.id
+  service_name        = "com.amazonaws.${var.aws_region}.ecs"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = var.private_subnet_ids
+  security_group_ids  = [aws_security_group.vpc_endpoints.id]
+  private_dns_enabled = true
+  tags                = merge(local.common_tags, { Name = "${local.name_prefix}-ecs-endpoint" })
+}
+
+resource "aws_vpc_endpoint" "ecs_agent" {
+  count               = local.use_ec2 ? 1 : 0
+  vpc_id              = data.aws_vpc.selected.id
+  service_name        = "com.amazonaws.${var.aws_region}.ecs-agent"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = var.private_subnet_ids
+  security_group_ids  = [aws_security_group.vpc_endpoints.id]
+  private_dns_enabled = true
+  tags                = merge(local.common_tags, { Name = "${local.name_prefix}-ecs-agent-endpoint" })
+}
+
+resource "aws_vpc_endpoint" "ecs_telemetry" {
+  count               = local.use_ec2 ? 1 : 0
+  vpc_id              = data.aws_vpc.selected.id
+  service_name        = "com.amazonaws.${var.aws_region}.ecs-telemetry"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = var.private_subnet_ids
+  security_group_ids  = [aws_security_group.vpc_endpoints.id]
+  private_dns_enabled = true
+  tags                = merge(local.common_tags, { Name = "${local.name_prefix}-ecs-telemetry-endpoint" })
+}
+
 # Gateway endpoint — free, adds a route to the private route tables automatically
 resource "aws_vpc_endpoint" "s3" {
   count             = local.use_ecr ? 1 : 0

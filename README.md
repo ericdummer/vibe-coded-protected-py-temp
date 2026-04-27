@@ -75,13 +75,31 @@ Optional production-oriented inputs:
    ```bash
    terraform apply -var-file=your-environment.tfvars
    ```
-4. Build and push the container image using either:
-   - the included GitHub Actions workflow: `.github/workflows/aws-ecs-deploy.yml`
-   - or your own `docker build` / `docker push` flow
-5. Trigger a fresh deployment so ECS pulls the pushed image:
+4. Build and push the container image, then force a deployment:
+
+   **Option A — GitHub Actions (recommended):** trigger `.github/workflows/aws-ecs-deploy.yml` via `workflow_dispatch` with `terraform_action: apply`.
+
+   **Option B — manually from your machine:**
    ```bash
-   aws ecs update-service --cluster <cluster-name> --service <service-name> --force-new-deployment
+   # Authenticate Docker to ECR
+   aws ecr get-login-password --region us-west-2 | \
+     docker login --username AWS --password-stdin \
+     $(cd terraform && terraform output -raw ecr_repository_url | cut -d/ -f1)
+
+   # Build and push
+   SHA=$(git rev-parse HEAD)
+   ECR_URL=$(cd terraform && terraform output -raw ecr_repository_url)
+   docker build -t "$ECR_URL:$SHA" .
+   docker push "$ECR_URL:$SHA"
+
+   # Force ECS to deploy the new image
+   CLUSTER=$(cd terraform && terraform output -raw ecs_cluster_name)
+   SERVICE=$(cd terraform && terraform output -raw ecs_service_name)
+   aws ecs update-service --cluster "$CLUSTER" --service "$SERVICE" \
+     --force-new-deployment --region us-west-2
    ```
+
+   The app will be live at `terraform output alb_dns_name` once the new task is running (~1–2 min).
 
 ### IAM and secret handling
 

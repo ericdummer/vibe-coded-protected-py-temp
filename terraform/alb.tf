@@ -5,7 +5,8 @@ resource "aws_lb" "app" {
   security_groups    = [aws_security_group.alb.id]
   subnets            = var.public_subnet_ids
 
-  enable_deletion_protection = var.alb_enable_deletion_protection
+  enable_deletion_protection  = var.alb_enable_deletion_protection
+  drop_invalid_header_fields  = true
 
   tags = merge(local.common_tags, { Name = "${local.name_prefix}-alb" })
 }
@@ -36,26 +37,12 @@ resource "aws_lb_listener" "http" {
   protocol          = "HTTP"
 
   default_action {
-    type = local.create_https_listener ? "redirect" : "forward"
+    type = "redirect"
 
-    dynamic "redirect" {
-      for_each = local.create_https_listener ? [1] : []
-
-      content {
-        port        = "443"
-        protocol    = "HTTPS"
-        status_code = "HTTP_301"
-      }
-    }
-
-    dynamic "forward" {
-      for_each = local.create_https_listener ? [] : [1]
-
-      content {
-        target_group {
-          arn = aws_lb_target_group.app.arn
-        }
-      }
+    redirect {
+      port        = "443"
+      protocol    = "HTTPS"
+      status_code = "HTTP_301"
     }
   }
 }

@@ -28,7 +28,7 @@ resource "aws_security_group" "alb" {
     from_port   = var.container_port
     to_port     = var.container_port
     protocol    = "tcp"
-    cidr_blocks = var.egress_cidrs
+    cidr_blocks = [data.aws_vpc.selected.cidr_block]
   }
 
   tags = merge(local.common_tags, { Name = "${local.name_prefix}-alb-sg" })
@@ -52,7 +52,7 @@ resource "aws_security_group" "ecs_tasks" {
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = var.egress_cidrs
+    cidr_blocks = [data.aws_vpc.selected.cidr_block]
   }
 
   egress {
@@ -60,7 +60,7 @@ resource "aws_security_group" "ecs_tasks" {
     from_port   = 53
     to_port     = 53
     protocol    = "udp"
-    cidr_blocks = var.egress_cidrs
+    cidr_blocks = [data.aws_vpc.selected.cidr_block]
   }
 
   egress {
@@ -68,7 +68,7 @@ resource "aws_security_group" "ecs_tasks" {
     from_port   = 53
     to_port     = 53
     protocol    = "tcp"
-    cidr_blocks = var.egress_cidrs
+    cidr_blocks = [data.aws_vpc.selected.cidr_block]
   }
 
   egress {
@@ -76,7 +76,7 @@ resource "aws_security_group" "ecs_tasks" {
     from_port   = var.db_port
     to_port     = var.db_port
     protocol    = "tcp"
-    cidr_blocks = var.egress_cidrs
+    cidr_blocks = [data.aws_vpc.selected.cidr_block]
   }
 
   tags = merge(local.common_tags, { Name = "${local.name_prefix}-ecs-tasks-sg" })
@@ -93,7 +93,7 @@ resource "aws_security_group" "ecs_instances" {
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = var.egress_cidrs
+    cidr_blocks = [data.aws_vpc.selected.cidr_block]
   }
 
   egress {
@@ -101,7 +101,7 @@ resource "aws_security_group" "ecs_instances" {
     from_port   = 53
     to_port     = 53
     protocol    = "udp"
-    cidr_blocks = var.egress_cidrs
+    cidr_blocks = [data.aws_vpc.selected.cidr_block]
   }
 
   egress {
@@ -109,7 +109,7 @@ resource "aws_security_group" "ecs_instances" {
     from_port   = 53
     to_port     = 53
     protocol    = "tcp"
-    cidr_blocks = var.egress_cidrs
+    cidr_blocks = [data.aws_vpc.selected.cidr_block]
   }
 
   tags = merge(local.common_tags, { Name = "${local.name_prefix}-ecs-instances-sg" })
@@ -133,7 +133,7 @@ resource "aws_security_group" "db" {
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = var.egress_cidrs
+    cidr_blocks = [data.aws_vpc.selected.cidr_block]
   }
 
   tags = merge(local.common_tags, { Name = "${local.name_prefix}-db-sg" })
