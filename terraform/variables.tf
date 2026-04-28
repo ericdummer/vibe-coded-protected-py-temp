@@ -11,9 +11,13 @@ variable "project_name" {
 }
 
 variable "environment" {
-  description = "Deployment environment name."
+  description = "Deployment environment name. Use an SDLC stage (dev, staging, prod) or a personal handle (alice, john)."
   type        = string
   default     = "dev"
+  validation {
+    condition     = can(regex("^[a-z0-9][a-z0-9-]{0,30}[a-z0-9]$", var.environment))
+    error_message = "environment must be lowercase alphanumeric and hyphens, 2-32 chars, start and end with a letter or number."
+  }
 }
 
 variable "tags" {

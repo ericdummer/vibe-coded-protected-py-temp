@@ -213,6 +213,7 @@ docker-compose.override.yml
 .trivy/
 
 # Terraform
+terraform/backend.tf
 .terraform/
 *.tfstate
 *.tfstate.*
